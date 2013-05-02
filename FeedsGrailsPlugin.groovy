@@ -82,8 +82,6 @@ class FeedsGrailsPlugin {
 	def loadAfter = ['controllers']
 	def observe = ['controllers']
 
-	def author = "Marc Palmer"
-	def authorEmail = "marc@anyware.co.uk"
 	def title = "Render RSS/Atom feeds with a simple builder"
 	def description = '''\
 This plugin adds a feedType and feedVersion parameters to the render method of controllers, which if passed
@@ -94,6 +92,14 @@ should work.
 	'''
 	def documentation = 'http://grails.org/plugin/feeds'
 
+	def license = 'APACHE'
+	def developers = [
+		[name: 'Burt Beckwith', email: 'burt@burtbeckwith.com'],
+		[name: 'Marc Palmer', email: 'marc@anyware.co.uk']
+	]
+	def issueManagement = [system: 'JIRA', url: 'http://jira.grails.org/browse/GPFEEDS']
+	def scm = [url: 'https://github.com/burtbeckwith/grails-feeds']
+	
 	static MIME_TYPES = [
 		atom:'application/atom+xml',
 		rss:'application/rss+xml'
