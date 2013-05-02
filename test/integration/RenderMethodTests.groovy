@@ -14,11 +14,8 @@
  * limitations under the License.
  */
  
-import org.codehaus.groovy.grails.commons.ApplicationHolder
-import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
-import org.codehaus.groovy.grails.plugins.GrailsPlugin
-import org.springframework.web.context.request.RequestContextHolder
-import org.codehaus.groovy.grails.plugins.PluginManagerHolder
+import grails.plugin.feeds.TestController
+import groovy.util.XmlSlurper
 
 /** 
  * Argh so much pain and diminishing returns, not testing this... leave til later
@@ -29,46 +26,19 @@ import org.codehaus.groovy.grails.plugins.PluginManagerHolder
  */
 class RenderMethodTests extends GroovyTestCase {
 
-    static transactional = false
+	static transactional = false
 
-    Class addController(src) {
-		def gcl = new GroovyClassLoader()
-		def c = gcl.parseClass(src)
-		def event = PluginManagerHolder.pluginManager.getGrailsPlugin("controllers").notifyOfEvent(GrailsPlugin.EVENT_ON_CHANGE, c)
-        PluginManagerHolder.pluginManager.informObservers("controllers", event)
-        return c
-    }
-
+	private TestController controller = new TestController()
 
 	void testRenderNodes() {
-        def c = addController("""
-class TestController {
-	def test = {
-		def articles = ['A', 'B', 'C']
+		controller.test1()
 
-		render(feedType:"rss", feedVersion:"2.0") {
-			title = 'Test feed'
-			link = 'http://somewhere.com/'
-			description = "This is a test feed" 
+		def resp = controller.response.contentAsString
+		def dom = new XmlSlurper().parseText(resp)
+		assertNotNull dom
 
-			articles.each() { article ->
-				entry("Title for \$article") {
-				    "Content for \$article"
-				}
-			}
-		}
-	}
-}
-""")
-        def controller = c.newInstance()
-        controller.test()
-
-        def resp = controller.response.contentAsString
-        def dom = new XmlSlurper().parseText(resp)
-        assertNotNull dom
-
-        assertEquals 1, dom.channel.size()
-        assertEquals 3, dom.channel[0].item.size()
+		assertEquals 1, dom.channel.size()
+		assertEquals 3, dom.channel[0].item.size()
 	}
 
 /* 
@@ -79,238 +49,85 @@ class TestController {
 */    
 
 	void testRenderNodesToAtom10() {
-	    doTestRenderNodesToAtom("1.0")
-    }
-    
-	private void doTestRenderNodesToAtom(version) {
-        def c = addController("""
-class TestController {
-	def test = {
-		def articles = ['A', 'B', 'C']
-
-		render(feedType:"atom", feedVersion:"${version}") {
-			title = 'Test feed'
-			link = 'http://somewhere.com/'
-			description = "This is a test feed" 
-
-			articles.each() { article ->
-				entry("Title for \$article") {
-				    content { 
-				        "Content for \$article"
-				    }
-				}
-			}
-		}
+		doTestRenderNodesToAtom("1.0")
 	}
-}
-""")
-        def controller = c.newInstance()
-        controller.test()
 
-        def resp = controller.response.contentAsString
-        
-        println resp
-        
-        def dom = new XmlSlurper().parseText(resp)
-        assertNotNull dom
+	private void doTestRenderNodesToAtom(version) {
+		controller.test2(version)
 
-        assertEquals 3, dom.entry.size()
+		def resp = controller.response.contentAsString
+
+		println resp
+
+		def dom = new XmlSlurper().parseText(resp)
+		assertNotNull dom
+
+		assertEquals 3, dom.entry.size()
 	}
 
 	void testRenderNodesNestedExplicitContentNodeBeforePropertySetters() {
-        def c = addController("""
-class TestController {
-	def test = {
-		def articles = ['A', 'B', 'C']
+		controller.test3()
 
-		render(feedType:"rss", feedVersion:"2.0") {
-			title = 'Test feed'
-			link = 'http://somewhere.com/'
-			description = "This is a test feed" 
+		def resp = controller.response.contentAsString
+		println resp
 
-			articles.each() { article ->
-				entry("Title for \$article") {
-				    content(type:'text/html') {
-				        return "Content for \$article"
-				    }
+		def dom = new XmlSlurper().parseText(resp)
+		assertNotNull dom
 
-				    link = 'http://somewhere.com/x'
-
-				    publishedDate = new Date()
-
-				}
-			}
-		}
-	}
-}
-""")
-        def controller = c.newInstance()
-        controller.test()
-
-        def resp = controller.response.contentAsString
-        println resp
-
-        def dom = new XmlSlurper().parseText(resp)
-        assertNotNull dom
-
-        assertEquals 1, dom.channel.size()
-        assertEquals 3, dom.channel[0].item.size()
-        assertEquals 'http://somewhere.com/x', dom.channel[0].item[0].guid.text()
-        assertEquals 'http://somewhere.com/x', dom.channel[0].item[0].link.text()
+		assertEquals 1, dom.channel.size()
+		assertEquals 3, dom.channel[0].item.size()
+		assertEquals 'http://somewhere.com/x', dom.channel[0].item[0].guid.text()
+		assertEquals 'http://somewhere.com/x', dom.channel[0].item[0].link.text()
 	}
 
 	void testRenderNodesNestedExplicitContentNode() {
-        def c = addController("""
-class TestController {
-	def test = {
-		def articles = ['A', 'B', 'C']
+		controller.test4()
 
-		render(feedType:"rss", feedVersion:"2.0") {
-			title = 'Test feed'
-			link = 'http://somewhere.com/'
-			description = "This is a test feed" 
+		def resp = controller.response.contentAsString
+		println resp
 
-			articles.each() { article ->
-				entry("Title for \$article") {
-				    link = 'http://somewhere.com/x'
+		def dom = new XmlSlurper().parseText(resp)
+		assertNotNull dom
 
-				    publishedDate = new Date()
-				    
-				    content(type:'text/html') {
-				        return "Content for \$article"
-				    }
-
-				}
-			}
-		}
-	}
-}
-""")
-        def controller = c.newInstance()
-        controller.test()
-
-        def resp = controller.response.contentAsString
-        println resp
-
-        def dom = new XmlSlurper().parseText(resp)
-        assertNotNull dom
-
-        assertEquals 1, dom.channel.size()
-        assertEquals 3, dom.channel[0].item.size()
-        assertEquals 'http://somewhere.com/x', dom.channel[0].item[0].guid.text()
-        assertEquals 'http://somewhere.com/x', dom.channel[0].item[0].link.text()
+		assertEquals 1, dom.channel.size()
+		assertEquals 3, dom.channel[0].item.size()
+		assertEquals 'http://somewhere.com/x', dom.channel[0].item[0].guid.text()
+		assertEquals 'http://somewhere.com/x', dom.channel[0].item[0].link.text()
 	}
 
-    // Make sure our meta stuff is not inferfering with normal property resolution
+	// Make sure our meta stuff is not inferfering with normal property resolution
 	void testRenderNodesBadMethodResolution() {
-	    try {
-	        
-            def c = addController("""
-    class TestController {
-    	def test = {
-    		def articles = ['A', 'B', 'C']
-
-    		render(feedType:"rss", feedVersion:"2.0") {
-    			title = 'Test feed'
-    			link = 'http://somewhere.com/'
-    			description = "This is a test feed" 
-
-    			articles.each() { article ->
-    				entry("Title for \$article") {
-    				    link = 'http://somewhere.com/' + g.somethingFake.someFakeMetho('x')
-    				    publishedDate = new Date()
-
-    				    content(type:'text/html') {
-    				        return "Content for \$article"
-    				    }
-    				}
-    			}
-    		}
-    	}
-    }
-    """)
-            def controller = c.newInstance()
-            controller.test()
-            
-            fail("Should have received a MissingPropertyException")
-            
-        } catch (MissingPropertyException e) {
-            
-        }
+		shouldFail(MissingPropertyException) {
+			controller.test5()
+		}
 	}
 
 	void testRenderStringStillWorks() {
-	    def c = addController("""
-class StandardController {
-    def index = {
-        render("Hello world")
-    }
-}
-""")
-        def controller = c.newInstance()
-        controller.index()
+		controller.test6()
 
-        assertEquals "Hello world", controller.response.contentAsString
-    }
+		assertEquals "Hello world", controller.response.contentAsString
+	}
 
 	void testRenderClosureStillWorks() {
-	    def c = addController("""
-class BuilderController {
-    def index = {
-        render {
-            html {
-                body {
-                }
-            }
-        }
-    }
-}
-""")
-        def controller = c.newInstance()
-        controller.index()
+		controller.test7()
 
-        assertTrue controller.response.contentAsString.contains("<html>")
-    }
-	
+		assertTrue controller.response.contentAsString.contains("<html>")
+	}
+
 	void testRenderMapClosureStillWorks() {
-	    def c = addController("""
-class MapClosureController {
-    def index = {
-        render(contentType:"text/xml") {
-            root {
-                child {
-                }
-            }
-        }
-    }
-}
-""")
-        def controller = c.newInstance()
-        controller.index()
+		controller.test8()
 
-        assertTrue controller.response.contentAsString.contains("<root>")
-    }
+		assertTrue controller.response.contentAsString.contains("<root>")
+	}
 
 	void testSimple() {
-	    def c = addController("""
-class FeedController {
-    def index = {
-        render(feedType:"rss", feedVersion:"2.0") {
-            title = "My test feed"
-            link = "http://your.test.server/yourController/feed"
-            description = "test"
-        }
-    }
-}
-""")
-        def controller = c.newInstance()
-        controller.index()
+		controller.test9()
 
-        def resp = controller.response.contentAsString
-        def dom = new XmlSlurper().parseText(resp)
-        assertNotNull dom
+		def resp = controller.response.contentAsString
+		def dom = new XmlSlurper().parseText(resp)
+		assertNotNull dom
 
-        assertEquals 1, dom.channel.size()
-        assertEquals "My test feed", dom.channel[0].title.text()
+		assertEquals 1, dom.channel.size()
+		assertEquals "My test feed", dom.channel[0].title.text()
 	}
 }

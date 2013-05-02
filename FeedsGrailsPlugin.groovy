@@ -78,6 +78,7 @@ import feedsplugin.FeedBuilder
 class FeedsGrailsPlugin {
 	def version = "1.5"
 	def grailsVersion = "1.3 > *"
+	def pluginExcludes = ['grails-app/controllers/*']
 
 	def loadAfter = ['controllers']
 	def observe = ['controllers']
