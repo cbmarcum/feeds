@@ -83,7 +83,7 @@ class FeedsGrailsPlugin {
 	def loadAfter = ['controllers']
 	def observe = ['controllers']
 
-	def title = "Render RSS/Atom feeds with a simple builder"
+	def title = "Grails Feeds Plugin"
 	def description = '''\
 This plugin adds a feedType and feedVersion parameters to the render method of controllers, which if passed
 a valid feed type such as "rss" or "atom" and a version will expect a closure to be passed with render,
