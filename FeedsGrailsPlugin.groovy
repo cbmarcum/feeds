@@ -76,7 +76,7 @@ import feedsplugin.FeedBuilder
  * using the ROME API directly.
  */
 class FeedsGrailsPlugin {
-	def version = "1.5"
+	def version = "1.6"
 	def grailsVersion = "1.3 > *"
 	def pluginExcludes = ['grails-app/controllers/*']
 
