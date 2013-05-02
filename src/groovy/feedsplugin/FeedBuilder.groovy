@@ -1,12 +1,12 @@
 /*
  * Copyright 2007 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,16 +15,22 @@
  */
 package feedsplugin
 
-import com.sun.syndication.feed.synd.*
+import com.sun.syndication.feed.synd.SyndContent
+import com.sun.syndication.feed.synd.SyndContentImpl
+import com.sun.syndication.feed.synd.SyndEnclosure
+import com.sun.syndication.feed.synd.SyndEnclosureImpl
+import com.sun.syndication.feed.synd.SyndEntry
+import com.sun.syndication.feed.synd.SyndEntryImpl
+import com.sun.syndication.feed.synd.SyndFeed
+import com.sun.syndication.feed.synd.SyndFeedImpl
 import com.sun.syndication.io.SyndFeedOutput
-import com.sun.syndication.feed.module.itunes.*
 
 /**
  * This is a builder for creating ROME feed content using entry() and content() nodes.
  *
  * It can create a ROME SyndFeed object for a feed in a specific flavour, or it can render
  * such a feed to a String.
- * 
+ *
  * It supports setting any properties on the root node, and any properties on entry and content nodes.
  * There's a bit of smarts to handle different entry()/content() invocation such that it will "do the right thing"
  * for quick and dirty feeds:
@@ -33,106 +39,106 @@ import com.sun.syndication.feed.module.itunes.*
  *  - content nodes can take a string parameter which is used as the text/plain content body
  *  - entry node bodies can just return an object, the string value of which will be used as text/plain content for the entry
  *  - entry and content nodes can take a map as parameter, to set any properties of the node
- * 
+ *
  * Examples
  * ========
  *
- * Root node properties: 
- * 
+ * Root node properties:
+ *
  * def builder = new FeedBuilder()
  * builder.feed {
  *   title = "My title"
- *   link = "http://www.myblogsite.com"    
+ *   link = "http://www.myblogsite.com"
  * }
  * def feedA = builder.makeFeed('rss_2.0')
  *
  * def builder2 = new FeedBuilder()
  * builder2.feed(title: "My title", link: "http://www.myblogsite.com") {
- *   // nodes here     
+ *   // nodes here
  * }
  * def feedB = builder2.makeFeed('rss_2.0')
- * 
+ *
  * def builder3 = new FeedBuilder()
  * builder3.feed("My title") {
- *   link = "http://www.myblogsite.com"    
+ *   link = "http://www.myblogsite.com"
  * }
  * def feedC = builder2.makeFeed('rss_2.0')
  *
- * Entry nodes: 
- * 
+ * Entry nodes:
+ *
  * entry {
  *     title = "Article 1"
  *     link = "http://somedomain.com/feed/1"
  *     publishDate = new Date()
- *     
+ *
  *     //content here
  * }
- * 
+ *
  * entry("Article 2") {
  *     link = "http://somedomain.com/feed/2"
  *     publishDate = new Date()
  *     //content here
  * }
- * 
+ *
  * entry(title:"Title here", link:"http://somedomain.com/feed") {
  *     publishDate = new Date()
  *     //content here
  * }
  *
- * Content nodes: 
- * 
+ * Content nodes:
+ *
  * content() {
  *    type = "text/html"
  *    '<p>Hello world</p>' // can use "return" also
  * }
  *
- * content('Hello world') 
+ * content('Hello world')
  *
  * content(type:'text/html') {
  *    '<p>Hello world</p>' // can use "return" also
  * }
- * 
+ *
  * content(type:'text/html', value:'<p>Hello world</p>')
- * 
+ *
  * @author Marc Palmer (marc@anyware.co.uk)
  */
 class FeedBuilder extends GroovyObjectSupport {
 
-	static NODE_FEED = 'feed'
-	static NODE_ENTRY = 'entry'
-	static NODE_CONTENT = 'content'
-	static NODE_ENCLOSURE = 'enclosure'
-	
-	static MODULE_ITUNES = 'iTunes'
-	
-	static NODE_MAPPINGS = [
-	    (NODE_FEED):SyndFeedImpl, 
-	    (NODE_ENTRY):SyndEntryImpl, 
-	    (NODE_CONTENT):SyndContentImpl,
-	    (NODE_ENCLOSURE):SyndEnclosureImpl
+	static final String NODE_FEED = 'feed'
+	static final String NODE_ENTRY = 'entry'
+	static final String NODE_CONTENT = 'content'
+	static final String NODE_ENCLOSURE = 'enclosure'
+
+	static final String MODULE_ITUNES = 'iTunes'
+
+	static final Map NODE_MAPPINGS = [
+	    (NODE_FEED): SyndFeedImpl,
+	    (NODE_ENTRY): SyndEntryImpl,
+	    (NODE_CONTENT): SyndContentImpl,
+	    (NODE_ENCLOSURE): SyndEnclosureImpl
 	]
-	
-	static TYPE_RSS = "rss"
-	static TYPE_ATOM = "atom"
-	
-	static TYPES = [ TYPE_RSS, TYPE_ATOM ]
-	static DEFAULT_VERSIONS = [ 
+
+	static final String TYPE_RSS = "rss"
+	static final String TYPE_ATOM = "atom"
+
+	static final List TYPES = [ TYPE_RSS, TYPE_ATOM ]
+	static final Map DEFAULT_VERSIONS = [
 	    (TYPE_RSS):"2.0",
 	    (TYPE_ATOM):"1.0"
 	]
-	
-	static SUBNODES = [
+
+	static final Map SUBNODES = [
 		(NODE_FEED): [NODE_ENTRY] as HashSet,
 		(NODE_ENTRY): [NODE_CONTENT, NODE_ENCLOSURE] as HashSet,
 		(NODE_CONTENT): [],
 		(NODE_ENCLOSURE): []
 	]
 
-	static MODULES = [
-	    (MODULE_ITUNES): [
-            	(NODE_FEED): EnhancediTunesFeedInformationImpl,
-            	(NODE_ENTRY): EnhancediTunesEntryInformationImpl
-	        ]
+	static final Map MODULES = [
+		(MODULE_ITUNES): [
+			(NODE_FEED): EnhancediTunesFeedInformationImpl,
+			(NODE_ENTRY): EnhancediTunesEntryInformationImpl
+		]
 	]
 
 	String feedType
@@ -143,12 +149,12 @@ class FeedBuilder extends GroovyObjectSupport {
 	def proxy = new FeedBuilderProxy(this)
 	def typeStack = []
 	def closureStack = []
-	
+
 	/**
-	 * Evaluate a feed builder closure, taking a map of root node properties 
+	 * Evaluate a feed builder closure, taking a map of root node properties
 	 */
 	void feed(Map attributes, Closure closure) {
-		feed( closure)
+		feed(closure)
 		feedProperties.putAll(attributes)
 	}
 
@@ -161,29 +167,29 @@ class FeedBuilder extends GroovyObjectSupport {
 		current = feedProperties
 		currentName = NODE_FEED
 		typeStack.clear()
-		typeStack << currentName 
-		
+		typeStack << currentName
+
 		invokeClosure(closure)
 	}
 
 	private handleNode(name, args) {
-	    def parentName = typeStack[-1]
-        def moduleInfo = MODULES[name]
+		def parentName = typeStack[-1]
+		def moduleInfo = MODULES[name]
 
-	    // Is this node type allowed here?
+		// Is this node type allowed here?
 		if (!SUBNODES[parentName].contains(name) && !moduleInfo?.get(parentName) ) {
 			throw new IllegalArgumentException("Cannot have [$name] here")
 		}
-		
+
 		// Search for built in node types
 		def type = NODE_MAPPINGS[name]
 		if (!type) {
-		    if (moduleInfo) {
-		        type = moduleInfo[parentName] // get the class the module uses when under the current parent node
-		    }
-		    if (!type) {
-			    throw new IllegalArgumentException("Node type [$name] is not supported by RSS Builder")
-		    }
+			if (moduleInfo) {
+				type = moduleInfo[parentName] // get the class the module uses when under the current parent node
+			}
+			if (!type) {
+				throw new IllegalArgumentException("Node type [$name] is not supported by RSS Builder")
+			}
 		}
 
 		def previousCurrent = current  // save current so we can re-instate as we are re-entrant here
@@ -194,15 +200,15 @@ class FeedBuilder extends GroovyObjectSupport {
 
 		// Store the node in right place
 		switch (thisCurrent.class) {
-			case SyndEntry: 
+			case SyndEntry:
 				entries << thisCurrent
-				break;
+				break
 			case SyndContent:
 				addContent(entries[-1], thisCurrent)
-				break;
+				break
 			case SyndEnclosure:
 				addEnclosure(entries[-1], thisCurrent)
-				break;
+				break
     		default:
     		    // If not a known node, it is a module
     		    if (moduleInfo) {
@@ -212,11 +218,11 @@ class FeedBuilder extends GroovyObjectSupport {
         		    }
     		        previousCurrent.modules << thisCurrent
 		        }
-    		    break;
+    		    break
 		}
 
 		def closureResult
-	
+
 		if (args.size() == 0) {
 			// do nothing
 		}
@@ -224,45 +230,45 @@ class FeedBuilder extends GroovyObjectSupport {
 			if (args[0] instanceof Closure) {
 				closureResult = invokeClosure(args[0])
 			} else if (args[0] instanceof Map) {
-				mapToProperties( args[0], thisCurrent)
+				mapToProperties(args[0], thisCurrent)
 			} else {
 				setValueOnNode(thisCurrent, args[0])
 			}
 		}
-		else if (args.size() == 2) { // Accept (Map, Closure) or (value, Closure) 
+		else if (args.size() == 2) { // Accept (Map, Closure) or (value, Closure)
 			if (args[0] instanceof Map) {
 				if (args[1] instanceof Closure) {
-					mapToProperties( args[0], thisCurrent)
+					mapToProperties(args[0], thisCurrent)
 					closureResult = invokeClosure(args[1])
 				} else {
-					throw new IllegalArgumentException( "[${name}] can accept (Map, Closure) or (Object, Closure) only")
+					throw new IllegalArgumentException("[${name}] can accept (Map, Closure) or (Object, Closure) only")
 				}
-			} else { 
+			} else {
 				if (args[1] instanceof Closure) {
 					setValueOnNode(thisCurrent, args[0])
 					closureResult = invokeClosure(args[1])
 				} else {
-					throw new IllegalArgumentException( "[${name}] can accept (Map, Closure) or (Object, Closure) only")
+					throw new IllegalArgumentException("[${name}] can accept (Map, Closure) or (Object, Closure) only")
 				}
 			}
 		}
-		
+
 		// Handle simple results from closures that create implicit nodes
 		if (closureResult && (closureResult instanceof String)) {
 			switch (name) {
-				case 'entry': 
+				case 'entry':
 					addContent(thisCurrent, new SyndContentImpl(type:'text/plain', value:closureResult))
-					break;
-				case 'content': 
+					break
+				case 'content':
 					if (thisCurrent.value == null) {
 						thisCurrent.value = closureResult
 					}
-					break;
+					break
 			}
 		}
 
 		typeStack.pop()
-		current = previousCurrent // do this so that we can be re-entrant and not lose "current" parent 
+		current = previousCurrent // do this so that we can be re-entrant and not lose "current" parent
 		return thisCurrent
 	}
 
@@ -280,24 +286,24 @@ class FeedBuilder extends GroovyObjectSupport {
 		}
 		entry.enclosures << enclosure
 	}
-	
+
 	private setValueOnNode(node, value) {
 		// ...and set something sensible to value, depending on node / or trash this and throw?
 		switch (node.class) {
-			case SyndFeed: 
+			case SyndFeed:
 				node.title = value.toString()
 				break
-			case SyndEntry: 
+			case SyndEntry:
 				node.title = value.toString()
 				break
-			case SyndContent: 
+			case SyndContent:
 				node.type = 'text/plain'
 				node.value = value
 				break
 			default:
-			    throw new IllegalArgumentException("You cannot set this node to a single value") 
-			    break;
-		}	
+			    throw new IllegalArgumentException("You cannot set this node to a single value")
+			    break
+		}
 	}
 
 	private invokeClosure(Closure closure) {
@@ -319,37 +325,37 @@ class FeedBuilder extends GroovyObjectSupport {
 	 * feed type (e.g. "rss") and version eg. "2.0"
 	 */
 	SyndFeed makeFeed(type, version = null) {
-        if (!TYPES.contains(type)) {
-            throw new IllegalArgumentException("Unknown feed type [$type]")
-        }
-        
+		if (!TYPES.contains(type)) {
+			throw new IllegalArgumentException("Unknown feed type [$type]")
+		}
+
 		def feed = new SyndFeedImpl()
 		mapToProperties(feedProperties, feed)
 		if (!version) {
-		    version = DEFAULT_VERSIONS[type]
+			version = DEFAULT_VERSIONS[type]
 		}
 		feed.feedType = "${type}_${version}"
 		feed.entries = entries
 		return feed
 	}
-	
-	private void mapToProperties( Map src, dest) {
-		src.each() { k, v ->
+
+	private void mapToProperties(Map src, dest) {
+		src.each { k, v ->
 			dest[k] = v
-		}	
+		}
 	}
-	
+
 	/**
 	 * Render the current state of the builder to a string feed, using the specified type
 	 */
 	def render(type, version = null) {
 		def feed = makeFeed(type, version)
 
-	    StringWriter writer = new StringWriter()
-	    SyndFeedOutput output = new SyndFeedOutput()
-	    output.output(feed,writer)
-	    writer.close()
-	
+		StringWriter writer = new StringWriter()
+		SyndFeedOutput output = new SyndFeedOutput()
+		output.output(feed,writer)
+		writer.close()
+
 		return writer.toString()
 	}
 }
@@ -361,7 +367,7 @@ class FeedBuilderProxy extends GroovyObjectSupport {
 		this.@builder = builder
 	}
 
-    // The builder will handle method invocations from within the node closures
+	 // The builder will handle method invocations from within the node closures
 	Object invokeMethod(String name, Object args) {
 		return this.@builder.handleNode(name, args)
 	}
@@ -373,11 +379,11 @@ class FeedBuilderProxy extends GroovyObjectSupport {
 				this.@builder.current."$property" = newValue
 				return
 			} catch (Exception e) {
-			    e.printStackTrace()
+				 e.printStackTrace()
 			}
 		}
 		super.setProperty(property, newValue)
-	}	
+	}
 	
 	// Handle property getting withing closures such that it gets properties of the current builder node
 	def getProperty(String property) {
@@ -390,5 +396,4 @@ class FeedBuilderProxy extends GroovyObjectSupport {
 		}
 		return super.getProperty(property)
 	}
-
 }

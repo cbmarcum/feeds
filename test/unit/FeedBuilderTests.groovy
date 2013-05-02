@@ -1,61 +1,62 @@
 /*
  * Copyright 2007 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 import feedsplugin.FeedBuilder
-import com.sun.syndication.feed.module.itunes.types.*
+
+import com.sun.syndication.feed.module.itunes.types.Category
+import com.sun.syndication.feed.module.itunes.types.Duration
+import com.sun.syndication.feed.module.itunes.types.Subcategory
 
 /**
  * @author Marc Palmer (marc@anyware.co.uk)
  */
 class FeedBuilderTests extends GroovyTestCase {
 
+	private FeedBuilder builder = new FeedBuilder()
+
 	void testBuilderRootNodeWithAttribs() {
-		def builder = new FeedBuilder()
-		
-		builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
+		builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
 			entry {
 				"Hello world"
 			}
 		}
-		
+
 		def feed = builder.makeFeed("rss","2.0")
 		assertEquals "Test feed", feed.title
 		assertEquals "http://somewhere.com/", feed.link
 	}
-	
+
 	void testBuilderRootNodeWithAttribsAndPropertySetting() {
-		def builder = new FeedBuilder()
 		builder.feed(title:'Test feed') {
 			link = 'http://somewhere.com/'
 			entry {
 				"Hello world"
 			}
 		}
-		
+
 		def feed = builder.makeFeed("rss","2.0")
 		assertEquals "Test feed", feed.title
 		assertEquals "http://somewhere.com/", feed.link
 	}
 
 	void testBuilderEntries() {
-		def builder = new FeedBuilder()
-	
+
 		def pubDate = new Date()
-		
-		builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
+
+		builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
 			entry('entry one') {
 				"Hello"
 			}
@@ -64,7 +65,7 @@ class FeedBuilderTests extends GroovyTestCase {
 			}
 			entry([title:'entry three',link:'http://somewhere.com/entry3']) {
 				"Hello"
-			} 
+			}
 			entry {
 				"Hello"
 			}
@@ -78,7 +79,7 @@ class FeedBuilderTests extends GroovyTestCase {
 
 		assertEquals "entry one", feed.entries[0].title
 		assertEquals "Hello", feed.entries[0].contents[0].value
-		
+
 		assertEquals "entry two", feed.entries[1].title
 		assertEquals 'http://somewhere.com/entry2', feed.entries[1].link
 		assertEquals "Hello", feed.entries[1].contents[0].value
@@ -95,14 +96,13 @@ class FeedBuilderTests extends GroovyTestCase {
 	}
 
 	void testBuilderEnclosures() {
-		def builder = new FeedBuilder()
-	
-		builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
+
+		builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
 			entry {
 				title = "entry one"
 				link = "http://somewhere.com/podcast/"
 				content {
-				    "Hello"
+					"Hello"
 				}
 				enclosure(type:'audio/mp3', url:'http://somewhere.com/podcast/episode1.mp3', length:99999)
 				enclosure(type:'audio/m4a', url:'http://somewhere.com/podcast/episode1b.mp3', length:1234567)
@@ -114,39 +114,37 @@ class FeedBuilderTests extends GroovyTestCase {
 		assertEquals "entry one", feed.entries[0].title
 		assertEquals "Hello", feed.entries[0].contents[0].value
 		assertEquals "http://somewhere.com/podcast/", feed.entries[0].link
-		
+
 		assertEquals "audio/mp3", feed.entries[0].enclosures[0].type
 		assertEquals "http://somewhere.com/podcast/episode1.mp3", feed.entries[0].enclosures[0].url
 		assertEquals 99999, feed.entries[0].enclosures[0].length
-		
+
 		assertEquals "audio/m4a", feed.entries[0].enclosures[1].type
 		assertEquals "http://somewhere.com/podcast/episode1b.mp3", feed.entries[0].enclosures[1].url
 		assertEquals 1234567, feed.entries[0].enclosures[1].length
-		
 	}
 
 	void testBuilderiTunesTags() {
-		def builder = new FeedBuilder()
-	
-		builder.feed( title: 'Test podcast', link:'http://somewhere.com/podcast') {
+
+		builder.feed(title: 'Test podcast', link:'http://somewhere.com/podcast') {
 			iTunes {
-			    author = "Marc Palmer"
-			    keywords = ["music", "rock"]
-			    categories = [new Category(name:'cat', subcategory: new Subcategory('subcat'))]
+				author = "Marc Palmer"
+				keywords = ["music", "rock"]
+				categories = [new Category(name:'cat', subcategory: new Subcategory('subcat'))]
 			}
-			
+
 			entry {
 				title = "episode 1"
 				link = "http://somewhere.com/podcast/1"
 				content {
-				    "Hello"
+					"Hello"
 				}
 				enclosure(type:'audio/mp3', url:'http://somewhere.com/podcast/episode1.mp3', length:99999)
 				iTunes {
-				    summary = "Angel of Death"
-				    author = "Slayer"
-				    duration = new Duration("0:59")
-				    keywords = ["rock", "death", "metal"]
+					summary = "Angel of Death"
+					author = "Slayer"
+					duration = new Duration("0:59")
+					keywords = ["rock", "death", "metal"]
 				}
 			}
 		}
@@ -156,45 +154,43 @@ class FeedBuilderTests extends GroovyTestCase {
 		assertEquals "episode 1", feed.entries[0].title
 		assertEquals "Hello", feed.entries[0].contents[0].value
 		assertEquals "http://somewhere.com/podcast/1", feed.entries[0].link
-		
+
 		assertEquals "audio/mp3", feed.entries[0].enclosures[0].type
 		assertEquals "http://somewhere.com/podcast/episode1.mp3", feed.entries[0].enclosures[0].url
 		assertEquals 99999, feed.entries[0].enclosures[0].length
-		
+
 		// itunes channel bits
 		def module = feed.getModule("http://www.itunes.com/dtds/podcast-1.0.dtd")
 		assertEquals "Marc Palmer", module.author
 		assert ["music", "rock"] == module.keywords
 		assertEquals "cat", module.categories[0].name
 		assertEquals "subcat", module.categories[0].subcategory.name
-	
+
 		// itunes item bits
 		module = feed.entries[0].getModule("http://www.itunes.com/dtds/podcast-1.0.dtd")
 		assertEquals "Angel of Death", module.summary
 		assertEquals "Slayer", module.author
 		assertEquals 59000, module.duration.milliseconds
 		assert ["rock", "death", "metal"] == module.keywords
-		
 	}
-	
+
 	void testBuilderiTunesTagsEnhancedUsage() {
-		def builder = new FeedBuilder()
-	
-		builder.feed( title: 'Test podcast', link:'http://somewhere.com/podcast') {
+
+		builder.feed(title: 'Test podcast', link:'http://somewhere.com/podcast') {
 			iTunes {
-			    author = "Marc Palmer"
-			    keywords = ["music", "rock"]
-			    categories = [ ['cat', 'subcat'], 'test' ] 
+				author = "Marc Palmer"
+				keywords = ["music", "rock"]
+				categories = [ ['cat', 'subcat'], 'test' ]
 			}
-			
+
 			entry {
 				title = "episode 1"
 				link = "http://somewhere.com/podcast/1"
 				content {
-				    "Hello"
+					"Hello"
 				}
 				iTunes {
-				    durationText = "0:59"
+					durationText = "0:59"
 				}
 			}
 		}
@@ -208,19 +204,17 @@ class FeedBuilderTests extends GroovyTestCase {
 		assertEquals "cat", module.categories[0].name
 		assertEquals "subcat", module.categories[0].subcategory.name
 		assertEquals "test", module.categories[1].name
-	
+
 		// itunes item bits
 		module = feed.entries[0].getModule("http://www.itunes.com/dtds/podcast-1.0.dtd")
 		assertEquals 59000, module.duration.milliseconds
-		
 	}
-	
+
 	void testBuilderContent() {
-		def builder = new FeedBuilder()
-	
-		builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
-			description = "This is a test feed" 
-			
+
+		builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
+			description = "This is a test feed"
+
 			entry {
 				"One"
 			}
@@ -268,7 +262,7 @@ class FeedBuilderTests extends GroovyTestCase {
 
 		assertEquals "<p>Four</p>", feed.entries[3].contents[0].value
 		assertEquals "text/html", feed.entries[3].contents[0].type
-		
+
 		assertEquals "<p>Five</p>", feed.entries[4].contents[0].value
 		assertEquals "text/html", feed.entries[4].contents[0].type
 
@@ -279,10 +273,9 @@ class FeedBuilderTests extends GroovyTestCase {
 	}
 
 	void testBuilderValidation() {
-		def builder = new FeedBuilder()
 
 		shouldFail {
-			builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
+			builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
 				entry {
 					entry {
 						"Invalid"
@@ -291,26 +284,26 @@ class FeedBuilderTests extends GroovyTestCase {
 			}
 		}
 
-		// We can't assert that this is an error, as the last expression in a closure would 
+		// We can't assert that this is an error, as the last expression in a closure would
 		// always break it
 /*
 		builder = new FeedBuilder()
 		shouldFail {
-			builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
+			builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
 				"Invalid"
 			}
 		}
 */
 		builder = new FeedBuilder()
 		shouldFail {
-			builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
+			builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
 				content("Invalid")
 			}
 		}
 
 		builder = new FeedBuilder()
 		shouldFail {
-			builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
+			builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
 				entry {
 					content {
 						content()
@@ -321,7 +314,7 @@ class FeedBuilderTests extends GroovyTestCase {
 
 		builder = new FeedBuilder()
 		shouldFail {
-			builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
+			builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
 				entry {
 					content {
 						entry()
@@ -332,7 +325,7 @@ class FeedBuilderTests extends GroovyTestCase {
 
 		builder = new FeedBuilder()
 		shouldFail {
-			builder.feed( title: 'Test feed', link:'http://somewhere.com/') {
+			builder.feed(title: 'Test feed', link:'http://somewhere.com/') {
 				content {
 					entry {
 						"Invalid"
@@ -341,7 +334,4 @@ class FeedBuilderTests extends GroovyTestCase {
 			}
 		}
 	}
-	
-
 }
-
