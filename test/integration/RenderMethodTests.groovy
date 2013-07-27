@@ -33,8 +33,7 @@ class RenderMethodTests extends GroovyTestCase {
 	void testRenderNodes() {
 		controller.test1()
 
-		def resp = controller.response.contentAsString
-		def dom = new XmlSlurper().parseText(resp)
+		def dom = parseXml(controller.response.contentAsString)
 		assertNotNull dom
 
 		assertEquals 1, dom.channel.size()
@@ -55,11 +54,7 @@ class RenderMethodTests extends GroovyTestCase {
 	private void doTestRenderNodesToAtom(version) {
 		controller.test2(version)
 
-		def resp = controller.response.contentAsString
-
-		println resp
-
-		def dom = new XmlSlurper().parseText(resp)
+		def dom = parseXml(controller.response.contentAsString)
 		assertNotNull dom
 
 		assertEquals 3, dom.entry.size()
@@ -68,10 +63,7 @@ class RenderMethodTests extends GroovyTestCase {
 	void testRenderNodesNestedExplicitContentNodeBeforePropertySetters() {
 		controller.test3()
 
-		def resp = controller.response.contentAsString
-		println resp
-
-		def dom = new XmlSlurper().parseText(resp)
+		def dom = parseXml(controller.response.contentAsString)
 		assertNotNull dom
 
 		assertEquals 1, dom.channel.size()
@@ -83,10 +75,7 @@ class RenderMethodTests extends GroovyTestCase {
 	void testRenderNodesNestedExplicitContentNode() {
 		controller.test4()
 
-		def resp = controller.response.contentAsString
-		println resp
-
-		def dom = new XmlSlurper().parseText(resp)
+		def dom = parseXml(controller.response.contentAsString)
 		assertNotNull dom
 
 		assertEquals 1, dom.channel.size()
@@ -123,11 +112,16 @@ class RenderMethodTests extends GroovyTestCase {
 	void testSimple() {
 		controller.test9()
 
-		def resp = controller.response.contentAsString
-		def dom = new XmlSlurper().parseText(resp)
+		def dom = parseXml(controller.response.contentAsString)
 		assertNotNull dom
 
 		assertEquals 1, dom.channel.size()
 		assertEquals "My test feed", dom.channel[0].title.text()
+	}
+
+	private parseXml(String xml) {
+		def slurper = new XmlSlurper()
+		slurper.setFeature 'http://apache.org/xml/features/disallow-doctype-decl', true
+		slurper.parseText xml
 	}
 }
