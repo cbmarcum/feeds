@@ -1,12 +1,13 @@
+[![Build Status](https://travis-ci.org/gpc/feeds.svg?branch=master)](https://travis-ci.org/gpc/feeds)
+
 # Feeds Plugin
 
-A plugin that renders RSS/Atom feeds, or any other formats supported by the ROME API, as well as iTunes compatible podcasts.
+A Grails 3.0+ plugin that renders RSS/Atom feeds, or any other formats supported by the ROME API, as well as iTunes compatible podcasts.
 
-To install, add a dependency in your BuildConfig.groovy:
+To install, add a dependency in your build.gradle:
 
-     plugins {
-        compile ':feeds:1.6'
-     }
+        compile 'org.grails.plugins:feeds:2.0.0-SNAPSHOT'
+     
 
 It works like this - you call render() method from your controller action as normal, but instead
 of using a view you specify a feedType parameter and a feedVersion parameter, as well as a closure that uses a custom feed builder to define the feed. Currently, feed types "rss" and "atom" are supported.
