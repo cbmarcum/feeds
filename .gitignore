@@ -1,3 +1,5 @@
+build/
+.gradle/
 *.zip
 plugin.xml
 *.log

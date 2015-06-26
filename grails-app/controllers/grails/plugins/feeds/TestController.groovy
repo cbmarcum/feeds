@@ -1,6 +1,6 @@
-package grails.plugin.feeds
+package grails.plugins.feeds
 
-class TestController {
+class TestController implements FeedRenderer {
 
 	def test1() {
 		def articles = ['A', 'B', 'C']

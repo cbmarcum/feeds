@@ -1,3 +1,4 @@
+package grails.plugins.feeds
 /*
  * Copyright 2007 the original author or authors.
  *
@@ -14,16 +15,21 @@
  * limitations under the License.
  */
 
-import feedsplugin.FeedBuilder
 
 import com.sun.syndication.feed.module.itunes.types.Category
 import com.sun.syndication.feed.module.itunes.types.Duration
 import com.sun.syndication.feed.module.itunes.types.Subcategory
+import static org.junit.Assert.*
+import org.junit.*
+
+import grails.test.mixin.TestMixin
+import grails.test.mixin.support.*
 
 /**
  * @author Marc Palmer (marc@anyware.co.uk)
  */
-class FeedBuilderTests extends GroovyTestCase {
+@TestMixin(GrailsUnitTestMixin)
+class FeedBuilderTests {
 
 	private FeedBuilder builder = new FeedBuilder()
 

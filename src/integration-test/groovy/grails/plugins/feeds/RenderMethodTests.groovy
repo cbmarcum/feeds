@@ -1,3 +1,4 @@
+package grails.plugins.feeds
 /*
  * Copyright 2007 the original author or authors.
  * 
@@ -14,8 +15,14 @@
  * limitations under the License.
  */
  
-import grails.plugin.feeds.TestController
 import groovy.util.XmlSlurper
+import static org.junit.Assert.*
+import grails.test.mixin.TestMixin
+import grails.test.mixin.integration.IntegrationTestMixin
+import grails.transaction.*
+import org.junit.Before
+import grails.util.*
+
 
 /** 
  * Argh so much pain and diminishing returns, not testing this... leave til later
@@ -24,11 +31,16 @@ import groovy.util.XmlSlurper
  *
  * @author Marc Palmer (marc@anyware.co.uk)
  */
-class RenderMethodTests extends GroovyTestCase {
+@TestMixin(IntegrationTestMixin)
+// @Rollback
+class RenderMethodTests {
 
-	static transactional = false
 
 	private TestController controller = new TestController()
+
+	void setUp() {
+		GrailsWebMockUtil.bindMockWebRequest()
+	}
 
 	void testRenderNodes() {
 		controller.test1()
@@ -86,8 +98,12 @@ class RenderMethodTests extends GroovyTestCase {
 
 	// Make sure our meta stuff is not inferfering with normal property resolution
 	void testRenderNodesBadMethodResolution() {
-		shouldFail(MissingPropertyException) {
+		try {
 			controller.test5()
+			fail("shouldn't happen")			
+		}
+		catch(MissingPropertyException e) {
+			// expected
 		}
 	}
 

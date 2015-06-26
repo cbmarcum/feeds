@@ -1,3 +1,4 @@
+package grails.plugins.feeds
 /*
  * Copyright 2007 the original author or authors.
  *

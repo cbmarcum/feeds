@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feedsplugin
+package grails.plugins.feeds
 
 import com.sun.syndication.feed.synd.SyndContent
 import com.sun.syndication.feed.synd.SyndContentImpl

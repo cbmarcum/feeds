@@ -1,4 +1,4 @@
-package feedsplugin
+package grails.plugins.feeds
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

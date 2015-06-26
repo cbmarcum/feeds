@@ -1,3 +1,4 @@
+package grails.plugins.feeds
 /*
  * Copyright 2007 the original author or authors.
  *
@@ -14,11 +15,11 @@
  * limitations under the License.
  */
 
-import org.codehaus.groovy.grails.commons.ControllerArtefactHandler
+import org.grails.core.artefact.ControllerArtefactHandler
 
 import com.sun.syndication.io.SyndFeedOutput
 
-import feedsplugin.FeedBuilder
+import grails.plugins.*
 
 /**
  * A plugin that renders RSS/Atom feeds, or any other formats supported by the ROME API.
@@ -75,10 +76,9 @@ import feedsplugin.FeedBuilder
  * Enclosures and descriptions are currently not directly supported by the builder but can be constructed
  * using the ROME API directly.
  */
-class FeedsGrailsPlugin {
-	def version = "1.6"
-	def grailsVersion = "1.3 > *"
-	def pluginExcludes = ['grails-app/controllers/*']
+class FeedsGrailsPlugin extends Plugin {
+	def grailsVersion = "3.0.0 > *"
+	def pluginExcludes = ['grails/plugins/feeds/Test*']
 
 	def loadAfter = ['controllers']
 	def observe = ['controllers']
@@ -99,48 +99,5 @@ should work.
 		[name: 'Marc Palmer', email: 'marc@anyware.co.uk']
 	]
 	def issueManagement = [system: 'JIRA', url: 'http://jira.grails.org/browse/GPFEEDS']
-	def scm = [url: 'https://github.com/burtbeckwith/grails-feeds']
-	
-	static MIME_TYPES = [
-		atom:'application/atom+xml',
-		rss:'application/rss+xml'
-	]
-
-	def doWithDynamicMethods = { ctx ->
-		for (controllerClass in application.controllerClasses) {
-			replaceRenderMethod controllerClass
-		}
-	}
-
-	def onChange = { event ->
-		if (application.isArtefactOfType(ControllerArtefactHandler.TYPE, event.source)) {
-			replaceRenderMethod application.getControllerClass(event.source?.name)
-		}
-	}
-
-	private void replaceRenderMethod(controllerClass) {
-		def oldRender = controllerClass.metaClass.pickMethod("render", [Map, Closure] as Class[])
-		controllerClass.metaClass.render = { Map params, Closure closure ->
-			if (params.feedType) {
-				// Here we should assert feed type is supported
-				def builder = new FeedBuilder()
-				builder.feed(closure)
-
-				def type = params.feedType
-				def mimeType = params.contentType ?: MIME_TYPES[type]
-				if (!mimeType) {
-					throw new IllegalArgumentException("No mime type known for feed type [${type}]")
-				}
-
-				response.contentType = mimeType
-				response.characterEncoding = "UTF-8"
-
-				new SyndFeedOutput().output(builder.makeFeed(type, params.feedVersion),response.writer)
-			}
-			else {
-				// Defer to original render method
-				oldRender.invoke(delegate, [params, closure] as Object[])
-			}
-		}
-	}
+	def scm = [url: 'https://github.com/burtbeckwith/grails-feeds']	
 }

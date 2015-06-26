@@ -1,4 +1,4 @@
-package feedsplugin
+package grails.plugins.feeds
 
 import com.sun.syndication.feed.module.itunes.EntryInformationImpl
 import com.sun.syndication.feed.module.itunes.types.Duration
